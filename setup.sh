@@ -24,6 +24,12 @@ git clone https://github.com/adafruit/Adafruit_Python_MAX31855.git
 cd ~/Adafruit_Python_MAX31855
 python setup.py install
 
+echo "Installing ADS1x15 ADC library..."
+cd ~
+git clone https://github.com/adafruit/Adafruit_Python_ADS1x15.git
+cd Adafruit_Python_ADS1x15
+python setup.py install
+
 echo "Installing ivPID library..."
 cd ~
 git clone https://github.com/ivmech/ivPID.git

@@ -5,7 +5,7 @@ spi_port = 0
 spi_dev = 0
 
 # Pin # for relay connected to heating element
-he_pin = 26
+he_pin = 7
 
 # Default goal temperature
 set_temp = 221.
@@ -14,7 +14,7 @@ set_temp = 221.
 snooze = '07:00'
 
 # Main loop sample rate in seconds
-sample_time = 0.1
+sample_time = 0.3
 
 # PID Proportional, Integral, and Derivative values
 Pc = 3.4
