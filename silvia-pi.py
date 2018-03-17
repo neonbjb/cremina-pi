@@ -46,13 +46,15 @@ def he_control_loop(dummy,state):
   finally:
     GPIO.output(conf.he_pin,1)
     GPIO.cleanup()
-
+  
+    
 def pid_loop(dummy,state):
   import sys
   from time import sleep, time
   from math import isnan
   import Adafruit_GPIO.SPI as SPI
   import Adafruit_MAX31855.MAX31855 as MAX31855
+  import Adafruit_ADS1x15
   import PID as PID
   import config as conf
 
@@ -60,7 +62,26 @@ def pid_loop(dummy,state):
     return c * 9.0 / 5.0 + 32.0
 
   sensor = MAX31855.MAX31855(spi=SPI.SpiDev(conf.spi_port, conf.spi_dev))
-
+  
+  if conf.pressure:
+    adc = Adafruit_ADS1x15.ADS1115()
+  else:
+    adc = None
+    
+  def raw_pressure():
+    if adc != None:
+      return adc.read_adc(0, gain=1)
+    else:
+      return 0.
+    
+  def adc_pressure_to_bar(p):
+    # Gain of 1 means the maximum voltage that can be read is 4.09V.
+    # We're assuming the pressure sensor being used reads 5V at 12bar,
+    # so a reading of 2^15=9.81bar
+    MAX_READING = 16384.0
+    MAX_PRESSURE_BAR = 9.81
+    return p * MAX_PRESSURE_BAR / MAX_READING / 2
+  
   pid = PID.PID(conf.Pc,conf.Ic,conf.Dc)
   pid.SetPoint = state['settemp']
   pid.setSampleTime(conf.sample_time*5)
@@ -72,6 +93,8 @@ def pid_loop(dummy,state):
   avgpid = 0.
   temphist = [0.,0.,0.,0.,0.]
   avgtemp = 0.
+  pressurehist = [0.,0.,0.,0.,0.]
+  avgpressure = 0.
   lastsettemp = state['settemp']
   lasttime = time()
   sleeptime = 0
@@ -94,6 +117,11 @@ def pid_loop(dummy,state):
       tempf = c_to_f(tempc)
       temphist[i%5] = tempf
       avgtemp = sum(temphist)/len(temphist)
+      
+      # Fetch pressure
+      rawpressure = raw_pressure();
+      pressurehist[i%5] = adc_pressure_to_bar(rawpressure)
+      avgpressure = sum(pressurehist)/len(pressurehist)
 
       if avgtemp < 100 :
         lastcold = i
@@ -126,6 +154,8 @@ def pid_loop(dummy,state):
       state['i'] = i
       state['tempf'] = round(tempf,2)
       state['avgtemp'] = round(avgtemp,2)
+      state['rawpressure'] = round(rawpressure,2)
+      state['avgpressure'] = round(avgpressure,2)
       state['pidval'] = round(pidout,2)
       state['avgpid'] = round(avgpid,2)
       state['pterm'] = round(pid.PTerm,2)
@@ -170,6 +200,10 @@ def rest_server(dummy,state):
   @route('/curtemp')
   def curtemp():
     return str(state['avgtemp'])
+  
+  @route('/curpressure')
+  def curpressure():
+    return str(state['avgpressure'])
 
   @get('/settemp')
   def settemp():

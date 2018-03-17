@@ -2,6 +2,7 @@ var curtemp = new TimeSeries();
 var settemp = new TimeSeries();
 var settempm = new TimeSeries();
 var settempp = new TimeSeries();
+var curpress = new TimeSeries();
 var pterm = new TimeSeries();
 var iterm = new TimeSeries();
 var dterm = new TimeSeries();
@@ -31,11 +32,13 @@ function onresize() {
     if ($(window).height()*.50 > 450 ) {
       h = 450;
     } else {
-      h = $(window).height()*.50;
+      h = $(window).height()*.40;
     }
 
     $("#chart").attr("width", $("#fullrow").width()-30);
     $("#chart").attr("height", h);
+    $("#pressurechart").attr("width", $("#fullrow").width()-30);
+    $("#pressurechart").attr("height", h * .33);
     $("#pidchart").attr("width", $("#fullrow").width()-30);
     $("#pidchart").attr("height", h);
 
@@ -101,12 +104,14 @@ setInterval(function() {
         settemp.append(new Date().getTime(), resp.settemp);
         settempm.append(new Date().getTime(), resp.settemp-4);
         settempp.append(new Date().getTime(), resp.settemp+4);
+		    curpress.append(new Date().getTime(), resp.avgpressure);
         pterm.append(new Date().getTime(), resp.pterm);
         iterm.append(new Date().getTime(), resp.iterm);
         dterm.append(new Date().getTime(), resp.dterm);
         pidval.append(new Date().getTime(), resp.pidval);
         avgpid.append(new Date().getTime(), resp.avgpid);
         $("#curtemp").html(resp.tempf.toFixed(2));
+		    $("#curpressure").html(resp.avgpressure.toFixed(2));
         $("#pterm").html(resp.pterm.toFixed(2));
         $("#iterm").html(resp.iterm.toFixed(2));
         $("#dterm").html(resp.dterm.toFixed(2));
@@ -128,6 +133,10 @@ function createTimeline() {
   chart.addTimeSeries(settempp, {lineWidth:1,strokeStyle:'#ffffff'});
   chart.addTimeSeries(curtemp, {lineWidth:3,strokeStyle:'#ff0000'});
   chart.streamTo(document.getElementById("chart"), 500);
+	
+  var pressurechart = new SmoothieChart();
+  pressurechart.addTimeSeries(curpress, {lineWidth:3,strokeStyle:'#ffffff'});
+  pressurechart.streamTo(document.getElementById("pressurechart"), 500);
 
   var pidchart = new SmoothieChart({grid:{verticalSections:3},minValueScale:1.05,maxValueScale:1.05});
   pidchart.addTimeSeries(pterm, {lineWidth:2,strokeStyle:'#ff0000'});
