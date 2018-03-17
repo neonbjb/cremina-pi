@@ -51,6 +51,9 @@ High-level circuit diagram:
 
 ![Circuit Diagram](media/circuit.png?raw=true "Circuit Diagram")
 
+NOTE: This custom version of silvia-pi requires that you connect the SSR in reverse!
+e.g. Connect the Raspberry Pi 5V line to the SSR (+) and pin BCM7 to SSR (-).
+
 #### Software
 * OS - Raspbian Jessie
   * Full - https://downloads.raspberrypi.org/raspbian_latest

@@ -8,7 +8,7 @@ def he_control_loop(dummy,state):
 
   GPIO.setmode(GPIO.BCM)
   GPIO.setup(conf.he_pin, GPIO.OUT)
-  GPIO.output(conf.he_pin,0)
+  GPIO.output(conf.he_pin,1)
 
   heating = False
 
@@ -24,27 +24,27 @@ def he_control_loop(dummy,state):
 
       if state['snoozeon']:
         state['heating'] = False
-        GPIO.output(conf.he_pin,0)
+        GPIO.output(conf.he_pin,1)
         sleep(1)
       else:
         if avgpid >= 100 :
           state['heating'] = True
-          GPIO.output(conf.he_pin,1)
+          GPIO.output(conf.he_pin,0)
           sleep(1)
         elif avgpid > 0 and avgpid < 100:
           state['heating'] = True
-          GPIO.output(conf.he_pin,1)
-          sleep(avgpid/100.)
           GPIO.output(conf.he_pin,0)
+          sleep(avgpid/100.)
+          GPIO.output(conf.he_pin,1)
           sleep(1-(avgpid/100.))
           state['heating'] = False
         else:
-          GPIO.output(conf.he_pin,0)
+          GPIO.output(conf.he_pin,1)
           state['heating'] = False
           sleep(1)
 
   finally:
-    GPIO.output(conf.he_pin,0)
+    GPIO.output(conf.he_pin,1)
     GPIO.cleanup()
 
 def pid_loop(dummy,state):
