@@ -93,7 +93,7 @@ def pid_loop(dummy,state):
   avgpid = 0.
   temphist = [0.,0.,0.,0.,0.]
   avgtemp = 0.
-  pressurehist = [0.,0.,0.,0.,0.]
+  pressurehist = [0.,0.,0.,0.]
   avgpressure = 0.
   lastsettemp = state['settemp']
   lasttime = time()
@@ -102,6 +102,12 @@ def pid_loop(dummy,state):
   iswarm = False
   lastcold = 0
   lastwarm = 0
+  
+  shot_times = [] # Stores last 10 shot times
+  shot_start_time = 0 # Set to seconds since epoch since the last time shot_pressure_threshold was reached
+  shot_debounce_count = 0 # Used to debounce pressure readings to determine when shots start and end
+  DEBOUNCE_INTERVAL = 4 # Number of readings above the pressure threshold that must be seen before a shot is determined to have started
+  shot_in_progress = False # Set to True when debounce algorithm determines that shot has started. Used to detect the end of a shot.
 
   try:
     while True : # Loops 10x/second
@@ -120,8 +126,35 @@ def pid_loop(dummy,state):
       
       # Fetch pressure
       rawpressure = raw_pressure();
-      pressurehist[i%5] = adc_pressure_to_bar(rawpressure)
+      pressurehist[i%len(pressurehist)] = adc_pressure_to_bar(rawpressure)
       avgpressure = sum(pressurehist)/len(pressurehist)
+      
+      # Attempt to recognize and time shots based on pressure readings
+      if shot_in_progress:
+        if avgpressure < conf.shot_pressure_threshold:
+          shot_debounce_count += 1
+          if shot_debounce_count > DEBOUNCE_INTERVAL:
+            # Shot was finished.
+            shot_times.append(round(time() - shot_start_time,2))
+            shot_in_progress = False
+            shot_debounce_count = 0
+            shot_start_time = 0
+        else:
+          shot_debounce_count = 0
+      elif avgpressure > conf.shot_pressure_threshold:
+        if shot_debounce_count == 0:
+          shot_start_time = time()
+        shot_debounce_count += 1
+        if shot_debounce_count > DEBOUNCE_INTERVAL:
+          shot_in_progress = True
+          shot_debounce_count = 0
+      else:
+        shot_start_time = 0
+        shot_debounce_count = 0
+        
+      # Never let the shot times list grow bigger than 10
+      while len(shot_times) > 10:
+        del shot_times[0]
 
       if avgtemp < 100 :
         lastcold = i
@@ -166,6 +199,10 @@ def pid_loop(dummy,state):
         state['iterm'] = round(pid.ITerm * conf.Iw,2)
         state['dterm'] = round(pid.DTerm * conf.Dw,2)
       state['iscold'] = iscold
+      state['shotactive'] = shot_in_progress
+      state['activeshottime'] = 0 if (shot_start_time == 0) else (time() - shot_start_time)
+      state['shottimes'] = shot_times
+      state['lastshottime'] = 0 if (len(shot_times) == 0) else (shot_times[len(shot_times)-1])
 
       print time(), state
 

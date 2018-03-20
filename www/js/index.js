@@ -104,14 +104,16 @@ setInterval(function() {
         settemp.append(new Date().getTime(), resp.settemp);
         settempm.append(new Date().getTime(), resp.settemp-4);
         settempp.append(new Date().getTime(), resp.settemp+4);
-		    curpress.append(new Date().getTime(), resp.avgpressure);
+        curpress.append(new Date().getTime(), resp.avgpressure);
         pterm.append(new Date().getTime(), resp.pterm);
         iterm.append(new Date().getTime(), resp.iterm);
         dterm.append(new Date().getTime(), resp.dterm);
         pidval.append(new Date().getTime(), resp.pidval);
         avgpid.append(new Date().getTime(), resp.avgpid);
         $("#curtemp").html(resp.tempf.toFixed(2));
-		    $("#curpressure").html(resp.avgpressure.toFixed(2));
+		$("#curpressure").html(resp.avgpressure.toFixed(2));
+        $("#curshot").html(resp.activeshottime.toFixed(2));
+        $("#lastshot").html(resp.lastshottime.toFixed(2));
         $("#pterm").html(resp.pterm.toFixed(2));
         $("#iterm").html(resp.iterm.toFixed(2));
         $("#dterm").html(resp.dterm.toFixed(2));
