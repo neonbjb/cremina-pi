@@ -32,6 +32,7 @@ A Raspberry Pi modification to the Rancilio Silvia Espresso Machine implementing
   * $10 - https://www.sparkfun.com/products/13015
 * Thermocouple Amplifier - For interfacing between the Raspberry Pi and Thermocouple temperature probe
   * $15 - https://www.sparkfun.com/products/13266
+  * MAX6675 Thermocouple amps can be supported, but you will need to modify the Adafruit31855 library.
 * Type K Thermocouple - For accurate temperature measurement
   * $15 - http://www.auberins.com/index.php?main_page=product_info&cPath=20_3&products_id=307
 * Ribbon Cable - For connecting everything together
