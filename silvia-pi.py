@@ -52,35 +52,31 @@ def pid_loop(dummy,state):
   import sys
   from time import sleep, time
   from math import isnan
+  from hx711 import HX711
   import Adafruit_GPIO.SPI as SPI
   import Adafruit_MAX31855.MAX31855 as MAX31855
-  import Adafruit_ADS1x15
   import PID as PID
   import config as conf
+  
+  # Append the HX711 module into the path
+  sys.path.append('hx711py')
 
   def c_to_f(c):
     return c * 9.0 / 5.0 + 32.0
 
   sensor = MAX31855.MAX31855(spi=SPI.SpiDev(conf.spi_port, conf.spi_dev))
-  
-  if conf.pressure:
-    adc = Adafruit_ADS1x15.ADS1115()
-  else:
-    adc = None
+  loadcell = HX711(2, 3)
+  loadcell.set_reading_format("LSB", "MSB")
+  loadcell.set_reference_unit(1)
+  loadcell.reset();
+  loadcell.tare();
     
-  def raw_pressure():
-    if adc != None:
-      return adc.read_adc(0, gain=1)
-    else:
-      return 0.
+  def read_loadcell():
+    return loadcell.get_weight(5) / conf.loadcell_calibration
     
-  def adc_pressure_to_bar(p):
-    # Gain of 1 means the maximum voltage that can be read is 4.09V.
-    # We're assuming the pressure sensor being used reads 5V at 12bar,
-    # so a reading of 2^15=9.81bar
-    MAX_READING = 16384.0
-    MAX_PRESSURE_BAR = 9.81
-    return p * MAX_PRESSURE_BAR / MAX_READING / 2
+  def loadcell_weight_to_bar(p):
+    # 9 bar on the Cremina is ~= 40lbs of force on the loadcell.
+    return 9 * p / 40
   
   pid = PID.PID(conf.Pc,conf.Ic,conf.Dc)
   pid.SetPoint = state['settemp']
@@ -125,8 +121,8 @@ def pid_loop(dummy,state):
       avgtemp = sum(temphist)/len(temphist)
       
       # Fetch pressure
-      rawpressure = raw_pressure();
-      pressurehist[i%len(pressurehist)] = adc_pressure_to_bar(rawpressure)
+      rawpressure = read_loadcell();
+      pressurehist[i%len(pressurehist)] = loadcell_weight_to_bar(rawpressure)
       avgpressure = sum(pressurehist)/len(pressurehist)
       
       # Attempt to recognize and time shots based on pressure readings

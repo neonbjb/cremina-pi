@@ -25,11 +25,11 @@ Pw = 2.9
 Iw = 0.3
 Dw = 40.0
 
-# Whether or not to read pressure from an ADC on an I2C port.
-pressure = 1
-
 # Bars of pressure to use as a detector for the start of a shot.
 shot_pressure_threshold = 7
 
-#Web/REST Server Options
+# Web/REST Server Options
 port = 8080
+
+# Loadcell Calibration Value for 1lb of force
+loadcell_calibration = -9480
